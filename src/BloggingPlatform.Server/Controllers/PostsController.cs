@@ -3,6 +3,8 @@ using BloggingPlatform.Data.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 
 namespace BloggingPlatform.Server.Controllers
 {
@@ -52,20 +54,31 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> CreatePost([FromBody] Post post)
         {
-            if (post == null)
+            try
             {
-                return BadRequest();
+                if (post == null)
+                {
+                    return BadRequest();
+                }
+
+                await _postRepository.AddAsync(post);
+                int saveResult = await _postRepository.SaveAsync();
+
+                if (!(saveResult > 0))
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
+                }
+
+                return CreatedAtRoute("GetPost", new { id = post.Id }, post);
             }
-
-            await _postRepository.AddAsync(post);
-            int saveResult = await _postRepository.SaveAsync();
-
-            if (!(saveResult > 0))
+            catch (DbUpdateException ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
             }
-
-            return CreatedAtRoute("GetPost", new { id = post.Id }, post);
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
+            }
         }
 
         [HttpPut("{id:int}")]
@@ -75,32 +88,43 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> UpdatePost(int id, Post post)
         {
-            if (post == null || id != post.Id)
+            try
             {
-                return BadRequest("Id mismatch");
+                if (post == null || id != post.Id)
+                {
+                    return BadRequest("Id mismatch");
+                }
+
+                var postDb = await _postRepository.GetAsync(id);
+
+                if (postDb == null)
+                {
+                    return NotFound("Post not found");
+                }
+
+                postDb.Title = post.Title;
+                postDb.Content = post.Content;
+                postDb.Category = post.Category;
+                postDb.Tags = post.Tags;
+
+                await _postRepository.UpdateAsync(postDb);
+                int saveResult = await _postRepository.SaveAsync();
+
+                if (!(saveResult > 0))
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
+                }
+
+                return NoContent();
             }
-
-            var postDb = await _postRepository.GetAsync(id);
-
-            if (postDb == null)
+            catch (DbUpdateException ex)
             {
-                return NotFound("Post not found");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
             }
-
-            postDb.Title = post.Title;
-            postDb.Content = post.Content;
-            postDb.Category = post.Category;
-            postDb.Tags = post.Tags;
-
-            await _postRepository.UpdateAsync(postDb);
-            int saveResult = await _postRepository.SaveAsync();
-
-            if (!(saveResult > 0))
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
             }
-
-            return NoContent();
         }
 
         [HttpDelete("{id:int}")]
@@ -109,23 +133,35 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> DeletePost(int id)
         {
-            var exits = await _postRepository.ExitsAsync(id);
-
-            if (!exits)
+            try
             {
-                return NotFound("Post not found");
+                var exits = await _postRepository.ExitsAsync(id);
+
+                if (!exits)
+                {
+                    return NotFound("Post not found");
+                }
+
+                await _postRepository.DeleteAsync(id);
+                int saveResult = await _postRepository.SaveAsync();
+
+                if (!(saveResult > 0))
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
+                }
+
+                return NoContent();
             }
-
-            await _postRepository.DeleteAsync(id);
-            int saveResult = await _postRepository.SaveAsync();
-
-            if (!(saveResult > 0))
+            catch (DbUpdateException ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
             }
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
+            }
         }
+
 
     }
 }
