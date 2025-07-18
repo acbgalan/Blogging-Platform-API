@@ -18,6 +18,8 @@ namespace BloggingPlatform.Server.Controllers
         }
 
         [HttpGet("{id:int}", Name = "GetPost")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<Post>> GetPost(int id)
         {
             var post = await _postRepository.GetAsync(id);
@@ -31,6 +33,8 @@ namespace BloggingPlatform.Server.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<Post>>> GetPosts()
         {
             var posts = await _postRepository.GetAllAsync();
@@ -44,6 +48,8 @@ namespace BloggingPlatform.Server.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> CreatePost([FromBody] Post post)
         {
             if (post == null)
@@ -63,6 +69,10 @@ namespace BloggingPlatform.Server.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> UpdatePost(int id, Post post)
         {
             if (post == null || id != post.Id)
@@ -94,6 +104,9 @@ namespace BloggingPlatform.Server.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> DeletePost(int id)
         {
             var exits = await _postRepository.ExitsAsync(id);
