@@ -27,6 +27,5 @@ namespace BloggingPlatform.Data.Entities
         public DateTime UpdatedAt { get; set; }
 
         public List<Tag> Tags { get; set; } = new List<Tag>();
-
     }
 }
