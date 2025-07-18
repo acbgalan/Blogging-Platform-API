@@ -20,6 +20,10 @@ namespace BloggingPlatform.Data.Repositories
 
         public async Task AddAsync(Post entity)
         {
+            var now = DateTime.UtcNow;
+            entity.CreatedAt = now;
+            entity.UpdatedAt = now;
+
             await _context.Posts.AddAsync(entity);
         }
 
@@ -37,6 +41,7 @@ namespace BloggingPlatform.Data.Repositories
         {
             await Task.Run(() =>
             {
+                entity.UpdatedAt = DateTime.UtcNow;
                 _context.Update<Post>(entity);
             });
         }
