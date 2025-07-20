@@ -37,17 +37,32 @@ namespace BloggingPlatform.Server.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<List<Post>>> GetPosts()
+        public async Task<ActionResult<List<Post>>> GetPosts([FromQuery] string? searchTerm)
         {
-            var posts = await _postRepository.GetAllAsync();
-
-            if (posts.Count == 0)
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                return NotFound("Posts not found");
-            }
+                var posts = await _postRepository.SearchPostsAsync(searchTerm);
 
-            return Ok(posts);
+                if (posts.Count == 0)
+                {
+                    return NotFound("Posts not found");
+                }
+
+                return Ok(posts);
+            }
+            else
+            {
+                var posts = await _postRepository.GetAllAsync();
+
+                if (posts.Count == 0)
+                {
+                    return NotFound("Posts not found");
+                }
+
+                return Ok(posts);
+            }
         }
+
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]

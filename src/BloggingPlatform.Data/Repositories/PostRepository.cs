@@ -73,5 +73,17 @@ namespace BloggingPlatform.Data.Repositories
         {
             return await _context.SaveChangesAsync();
         }
+
+        public async Task<List<Post>> SearchPostsAsync(string searchTerm)
+        {
+            searchTerm = searchTerm.ToLower();
+
+            return await _context.Posts.Where(x =>
+                x.Title.ToLower().Contains(searchTerm) ||
+                x.Content.ToLower().Contains(searchTerm) ||
+                x.Category.ToLower().Contains(searchTerm) ||
+                x.Tags.Any(t => t.Name.ToLower().Contains(searchTerm))).ToListAsync();
+        }
+
     }
 }

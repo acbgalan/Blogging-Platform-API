@@ -9,5 +9,6 @@ namespace BloggingPlatform.Data.Repositories
 {
     public interface IPostRepository : IRepositoryAsync<Post>
     {
+        Task<List<Post>> SearchPostsAsync(string searchTerm);
     }
 }
