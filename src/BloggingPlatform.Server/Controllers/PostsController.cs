@@ -27,7 +27,7 @@ namespace BloggingPlatform.Server.Controllers
         [HttpGet("{id:int}", Name = "GetPost")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<Post>> GetPost(int id)
+        public async Task<ActionResult<PostResponse>> GetPost(int id)
         {
             var post = await _postRepository.GetAsync(id);
 
@@ -36,7 +36,9 @@ namespace BloggingPlatform.Server.Controllers
                 return NotFound("Post not found");
             }
 
-            return Ok(post);
+            var postResponse = _mapper.Map<PostResponse>(post);
+
+            return Ok(postResponse);
         }
 
         [HttpGet]

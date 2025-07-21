@@ -29,7 +29,9 @@ namespace BloggingPlatform.Data.Repositories
 
         public async Task<Post?> GetAsync(int id)
         {
-            return await _context.Posts.FindAsync(id);
+            return await _context.Posts
+                .Include(x => x.Tags)
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<List<Post>> GetAllAsync()
