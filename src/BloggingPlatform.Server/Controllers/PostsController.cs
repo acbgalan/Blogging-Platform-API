@@ -1,5 +1,7 @@
-﻿using BloggingPlatform.Data.Entities;
+﻿using AutoMapper;
+using BloggingPlatform.Data.Entities;
 using BloggingPlatform.Data.Repositories;
+using BloggingPlatform.Shared.Requests.Post;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +15,12 @@ namespace BloggingPlatform.Server.Controllers
     public class PostsController : ControllerBase
     {
         private readonly IPostRepository _postRepository;
+        private readonly IMapper _mapper;
 
-        public PostsController(IPostRepository postRepository)
+        public PostsController(IPostRepository postRepository, IMapper mapper)
         {
             _postRepository = postRepository;
+            _mapper = mapper;
         }
 
         [HttpGet("{id:int}", Name = "GetPost")]
@@ -67,14 +71,17 @@ namespace BloggingPlatform.Server.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> CreatePost([FromBody] Post post)
+        public async Task<ActionResult> CreatePost([FromBody] CreatePostRequest createPostRequest)
         {
             try
             {
-                if (post == null)
+                if (createPostRequest == null)
                 {
                     return BadRequest();
                 }
+
+                var post = _mapper.Map<Post>(createPostRequest);
+
 
                 await _postRepository.AddAsync(post);
                 int saveResult = await _postRepository.SaveAsync();
