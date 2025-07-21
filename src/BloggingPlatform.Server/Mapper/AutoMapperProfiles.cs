@@ -11,6 +11,13 @@ namespace BloggingPlatform.Server.Mapper
         {
             CreateMap<CreatePostRequest, Post>()
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(tagName => new Tag { Name = tagName }).ToList()));
+
+            CreateMap<Post, PostResponse>()
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(tagName => tagName.Name).ToList()));
+
+
         }
+
+
     }
 }

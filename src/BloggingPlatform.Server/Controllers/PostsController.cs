@@ -2,6 +2,7 @@
 using BloggingPlatform.Data.Entities;
 using BloggingPlatform.Data.Repositories;
 using BloggingPlatform.Shared.Requests.Post;
+using BloggingPlatform.Shared.Responses.Post;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -81,8 +82,6 @@ namespace BloggingPlatform.Server.Controllers
                 }
 
                 var post = _mapper.Map<Post>(createPostRequest);
-
-
                 await _postRepository.AddAsync(post);
                 int saveResult = await _postRepository.SaveAsync();
 
@@ -91,7 +90,9 @@ namespace BloggingPlatform.Server.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
                 }
 
-                return CreatedAtRoute("GetPost", new { id = post.Id }, post);
+                var postResponse = _mapper.Map<PostResponse>(post);
+
+                return CreatedAtRoute("GetPost", new { id = post.Id }, postResponse);
             }
             catch (DbUpdateException ex)
             {
