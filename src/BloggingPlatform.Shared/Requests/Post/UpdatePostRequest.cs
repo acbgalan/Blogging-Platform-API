@@ -8,5 +8,6 @@ namespace BloggingPlatform.Shared.Requests.Post
 {
     public class UpdatePostRequest : CreatePostRequest
     {
+        public int Id { get; set; }
     }
 }
