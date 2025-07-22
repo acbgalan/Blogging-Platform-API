@@ -9,13 +9,19 @@ namespace BloggingPlatform.Server.Mapper
     {
         public AutoMapperProfiles()
         {
+            PostMapping();
+        }
+
+        private void PostMapping()
+        {
             CreateMap<CreatePostRequest, Post>()
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(tagName => new Tag { Name = tagName }).ToList()));
+
+            CreateMap<UpdatePostRequest, Post>()
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(tagName => new Tag { Name = tagName }).ToList()));
 
             CreateMap<Post, PostResponse>()
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(tagName => tagName.Name).ToList()));
-
-
         }
 
 
