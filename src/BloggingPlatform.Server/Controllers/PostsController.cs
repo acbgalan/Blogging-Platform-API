@@ -44,7 +44,7 @@ namespace BloggingPlatform.Server.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<List<Post>>> GetPosts([FromQuery] string? searchTerm)
+        public async Task<ActionResult<List<PostResponse>>> GetPosts([FromQuery] string? searchTerm)
         {
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -55,7 +55,8 @@ namespace BloggingPlatform.Server.Controllers
                     return NotFound("Posts not found");
                 }
 
-                return Ok(posts);
+                var postsReponse = _mapper.Map<List<PostResponse>>(posts);
+                return Ok(postsReponse);
             }
             else
             {
@@ -66,6 +67,7 @@ namespace BloggingPlatform.Server.Controllers
                     return NotFound("Posts not found");
                 }
 
+                var postsResponse = _mapper.Map<List<PostResponse>>(posts);
                 return Ok(posts);
             }
         }
@@ -111,11 +113,11 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> UpdatePost(int id, Post post)
+        public async Task<ActionResult> UpdatePost(int id, UpdatePostRequest updatePostRequest)
         {
             try
             {
-                if (post == null || id != post.Id)
+                if (updatePostRequest == null || id != updatePostRequest.Id)
                 {
                     return BadRequest("Id mismatch");
                 }
@@ -127,10 +129,7 @@ namespace BloggingPlatform.Server.Controllers
                     return NotFound("Post not found");
                 }
 
-                postDb.Title = post.Title;
-                postDb.Content = post.Content;
-                postDb.Category = post.Category;
-                postDb.Tags = post.Tags;
+                postDb = _mapper.Map(updatePostRequest, postDb);
 
                 await _postRepository.UpdateAsync(postDb);
                 int saveResult = await _postRepository.SaveAsync();
@@ -186,7 +185,5 @@ namespace BloggingPlatform.Server.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
             }
         }
-
-
     }
 }

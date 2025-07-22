@@ -36,7 +36,7 @@ namespace BloggingPlatform.Data.Repositories
 
         public async Task<List<Post>> GetAllAsync()
         {
-            return await _context.Posts.ToListAsync();
+            return await _context.Posts.Include(x => x.Tags).ToListAsync();
         }
 
         public async Task UpdateAsync(Post entity)
@@ -80,11 +80,13 @@ namespace BloggingPlatform.Data.Repositories
         {
             searchTerm = searchTerm.ToLower();
 
-            return await _context.Posts.Where(x =>
-                x.Title.ToLower().Contains(searchTerm) ||
-                x.Content.ToLower().Contains(searchTerm) ||
-                x.Category.ToLower().Contains(searchTerm) ||
-                x.Tags.Any(t => t.Name.ToLower().Contains(searchTerm))).ToListAsync();
+            return await _context.Posts
+                .Include(x => x.Tags)
+                .Where(x =>
+                    x.Title.ToLower().Contains(searchTerm) ||
+                    x.Content.ToLower().Contains(searchTerm) ||
+                    x.Category.ToLower().Contains(searchTerm) ||
+                    x.Tags.Any(t => t.Name.ToLower().Contains(searchTerm))).ToListAsync();
         }
 
     }
