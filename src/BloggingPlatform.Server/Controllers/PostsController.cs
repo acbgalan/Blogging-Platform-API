@@ -68,7 +68,7 @@ namespace BloggingPlatform.Server.Controllers
                 }
 
                 var postsResponse = _mapper.Map<List<PostResponse>>(posts);
-                return Ok(posts);
+                return Ok(postsResponse);
             }
         }
 
