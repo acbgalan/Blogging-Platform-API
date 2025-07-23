@@ -47,30 +47,14 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<PostResponse>>> GetPosts([FromQuery] string? searchTerm)
         {
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+            var response = await _postService.GetPostsAsync(searchTerm);
+
+            if (!response.Success)
             {
-                var posts = await _postRepository.SearchPostsAsync(searchTerm);
-
-                if (posts.Count == 0)
-                {
-                    return NotFound("Posts not found");
-                }
-
-                var postsReponse = _mapper.Map<List<PostResponse>>(posts);
-                return Ok(postsReponse);
+                return NotFound(response.Message);
             }
-            else
-            {
-                var posts = await _postRepository.GetAllAsync();
 
-                if (posts.Count == 0)
-                {
-                    return NotFound("Posts not found");
-                }
-
-                var postsResponse = _mapper.Map<List<PostResponse>>(posts);
-                return Ok(postsResponse);
-            }
+            return Ok(response.Data);
         }
 
 

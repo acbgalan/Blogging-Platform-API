@@ -32,5 +32,31 @@ namespace BloggingPlatform.Server.Services.PostService
 
             return serviceResult;
         }
+
+        public async Task<ServiceResult<List<PostResponse>>> GetPostsAsync(string? searchTerm)
+        {
+            var posts = new List<Post>();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                posts = await _postRepository.SearchPostsAsync(searchTerm);
+            }
+            else
+            {
+                posts = await _postRepository.GetAllAsync();
+            }
+
+            var postsReponse = _mapper.Map<List<PostResponse>>(posts);
+
+            var serviceResult = new ServiceResult<List<PostResponse>>
+            {
+                Data = postsReponse,
+                Success = postsReponse.Any(),
+                Message = postsReponse.Any() ? "Posts retrieved" : "Posts not found",
+                StatusCode = postsReponse.Any() ? StatusCodes.Status200OK : StatusCodes.Status404NotFound
+            };
+
+            return serviceResult;
+        }
     }
 }
