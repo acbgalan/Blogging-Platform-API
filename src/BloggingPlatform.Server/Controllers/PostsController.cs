@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BloggingPlatform.Data.Entities;
 using BloggingPlatform.Data.Repositories;
+using BloggingPlatform.Server.Services.PostService;
 using BloggingPlatform.Shared.Requests.Post;
 using BloggingPlatform.Shared.Responses.Post;
 using Microsoft.AspNetCore.Http;
@@ -17,11 +18,13 @@ namespace BloggingPlatform.Server.Controllers
     {
         private readonly IPostRepository _postRepository;
         private readonly IMapper _mapper;
+        private readonly IPostService _postService;
 
-        public PostsController(IPostRepository postRepository, IMapper mapper)
+        public PostsController(IPostRepository postRepository, IMapper mapper, IPostService postService)
         {
             _postRepository = postRepository;
             _mapper = mapper;
+            _postService = postService;
         }
 
         [HttpGet("{id:int}", Name = "GetPost")]
@@ -29,16 +32,14 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<PostResponse>> GetPost(int id)
         {
-            var post = await _postRepository.GetAsync(id);
+            var response = await _postService.GetPostAsync(id);
 
-            if (post == null)
+            if (!response.Success)
             {
-                return NotFound("Post not found");
+                return NotFound(response.Message);
             }
 
-            var postResponse = _mapper.Map<PostResponse>(post);
-
-            return Ok(postResponse);
+            return Ok(response.Data);
         }
 
         [HttpGet]
