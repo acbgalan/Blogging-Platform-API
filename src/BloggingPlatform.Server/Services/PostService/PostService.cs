@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
 using BloggingPlatform.Data.Entities;
 using BloggingPlatform.Data.Repositories;
+using BloggingPlatform.Shared.Requests.Post;
 using BloggingPlatform.Shared.Responses;
 using BloggingPlatform.Shared.Responses.Post;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace BloggingPlatform.Server.Services.PostService
 {
@@ -55,6 +59,49 @@ namespace BloggingPlatform.Server.Services.PostService
                 Message = postsReponse.Any() ? "Posts retrieved" : "Posts not found",
                 StatusCode = postsReponse.Any() ? StatusCodes.Status200OK : StatusCodes.Status404NotFound
             };
+
+            return serviceResult;
+        }
+
+        public async Task<ServiceResult<PostResponse>> CreatePostAsync(CreatePostRequest createPostRequest)
+        {
+            var serviceResult = new ServiceResult<PostResponse>();
+
+            try
+            {
+                var post = _mapper.Map<Post>(createPostRequest);
+                await _postRepository.AddAsync(post);
+                int saveResult = await _postRepository.SaveAsync();
+                var postResponse = _mapper.Map<PostResponse>(post);
+
+                serviceResult = new ServiceResult<PostResponse>
+                {
+                    Data = postResponse,
+                    Success = saveResult > 0,
+                    Message = saveResult > 0 ? "Post created successfully" : "Unexpected value when saving",
+                    StatusCode = saveResult > 0 ? StatusCodes.Status201Created : StatusCodes.Status500InternalServerError
+                };
+            }
+            catch (DbUpdateException ex)
+            {
+                serviceResult = new ServiceResult<PostResponse>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = $"Database error: {ex.Message}",
+                    StatusCode = StatusCodes.Status500InternalServerError
+                };
+            }
+            catch (Exception ex)
+            {
+                serviceResult = new ServiceResult<PostResponse>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = $"Unexpected error: {ex.Message}",
+                    StatusCode = StatusCodes.Status500InternalServerError
+                };
+            }
 
             return serviceResult;
         }

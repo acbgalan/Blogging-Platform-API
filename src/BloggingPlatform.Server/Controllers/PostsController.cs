@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using System.Data.Common;
 
 namespace BloggingPlatform.Server.Controllers
@@ -47,50 +48,36 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<PostResponse>>> GetPosts([FromQuery] string? searchTerm)
         {
-            var response = await _postService.GetPostsAsync(searchTerm);
+            var serviceResponse = await _postService.GetPostsAsync(searchTerm);
 
-            if (!response.Success)
+            if (!serviceResponse.Success)
             {
-                return NotFound(response.Message);
+                return NotFound(serviceResponse.Message);
             }
 
-            return Ok(response.Data);
+            return Ok(serviceResponse.Data);
         }
 
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> CreatePost([FromBody] CreatePostRequest createPostRequest)
         {
-            try
+            if (createPostRequest == null)
             {
-                if (createPostRequest == null)
-                {
-                    return BadRequest();
-                }
-
-                var post = _mapper.Map<Post>(createPostRequest);
-                await _postRepository.AddAsync(post);
-                int saveResult = await _postRepository.SaveAsync();
-
-                if (!(saveResult > 0))
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
-                }
-
-                var postResponse = _mapper.Map<PostResponse>(post);
-
-                return CreatedAtRoute("GetPost", new { id = post.Id }, postResponse);
+                return BadRequest();
             }
-            catch (DbUpdateException ex)
+
+            var serviceResponse = await _postService.CreatePostAsync(createPostRequest);
+
+            if (!serviceResponse.Success)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
+                return StatusCode(serviceResponse.StatusCode, serviceResponse.Message);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
-            }
+
+            return CreatedAtRoute("GetPost", new { id = serviceResponse.Data!.Id }, serviceResponse.Data);
         }
 
         [HttpPut("{id:int}")]
