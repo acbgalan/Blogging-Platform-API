@@ -11,6 +11,7 @@ namespace BloggingPlatform.Server.Services.PostService
         Task<ServiceResult<List<PostResponse>>> GetPostsAsync(string? searchTerm);
         Task<ServiceResult<PostResponse>> CreatePostAsync(CreatePostRequest createPostRequest);
         Task<ServiceResult<bool?>> UpdatePostAsync(UpdatePostRequest updatePostRequest);
+        Task<ServiceResult<bool?>> DeletePostAsync(int id);
     }
 
 }

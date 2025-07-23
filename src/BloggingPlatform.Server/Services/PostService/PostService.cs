@@ -136,11 +136,67 @@ namespace BloggingPlatform.Server.Services.PostService
                     serviceResult.Message = "Unexpected value when saving";
                     serviceResult.StatusCode = StatusCodes.Status500InternalServerError;
                 }
-
+                else
+                {
+                    serviceResult.Data = null;
+                    serviceResult.Success = true;
+                    serviceResult.Message = "Post updated successfully";
+                    serviceResult.StatusCode = StatusCodes.Status204NoContent;
+                }
+            }
+            catch (DbUpdateException ex)
+            {
                 serviceResult.Data = null;
-                serviceResult.Success = true;
-                serviceResult.Message = "Post updated successfully";
-                serviceResult.StatusCode = StatusCodes.Status204NoContent;
+                serviceResult.Success = false;
+                serviceResult.Message = $"Database error: {ex.Message}";
+                serviceResult.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+            catch (Exception ex)
+            {
+                serviceResult.Data = null;
+                serviceResult.Success = false;
+                serviceResult.Message = $"Unexpected error: {ex.Message}";
+                serviceResult.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+
+            return serviceResult;
+        }
+
+        public async Task<ServiceResult<bool?>> DeletePostAsync(int id)
+        {
+            var serviceResult = new ServiceResult<bool?>();
+
+            try
+            {
+                var exits = await _postRepository.ExitsAsync(id);
+
+                if (!exits)
+                {
+                    serviceResult.Data = null;
+                    serviceResult.Success = false;
+                    serviceResult.Message = "Post not found";
+                    serviceResult.StatusCode = StatusCodes.Status404NotFound;
+
+                    return serviceResult;
+                }
+
+                await _postRepository.DeleteAsync(id);
+                int saveResult = await _postRepository.SaveAsync();
+
+                if (!(saveResult > 0))
+                {
+                    serviceResult.Data = null;
+                    serviceResult.Success = false;
+                    serviceResult.Message = "Unexpected value when saving";
+                    serviceResult.StatusCode = StatusCodes.Status500InternalServerError;
+                }
+                else
+                {
+                    serviceResult.Data = null;
+                    serviceResult.Success = true;
+                    serviceResult.Message = "Post removed successfully";
+                    serviceResult.StatusCode = StatusCodes.Status204NoContent;
+                }
             }
             catch (DbUpdateException ex)
             {

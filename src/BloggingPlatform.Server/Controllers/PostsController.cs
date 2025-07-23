@@ -32,7 +32,7 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<PostResponse>> GetPost(int id)
-        {
+                  {
             var response = await _postService.GetPostAsync(id);
 
             if (!response.Success)
@@ -87,7 +87,7 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> UpdatePost(int id, UpdatePostRequest updatePostRequest)
         {
-            if(updatePostRequest == null)
+            if (updatePostRequest == null)
             {
                 return BadRequest();
             }
@@ -97,7 +97,7 @@ namespace BloggingPlatform.Server.Controllers
                 return BadRequest("Id mismatch");
             }
 
-            var serviceResponse = await  _postService.UpdatePostAsync(updatePostRequest);
+            var serviceResponse = await _postService.UpdatePostAsync(updatePostRequest);
 
             if (!serviceResponse.Success)
             {
@@ -113,33 +113,15 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> DeletePost(int id)
         {
-            try
+            var serviceResponse = await _postService.DeletePostAsync(id);
+
+            if (!serviceResponse.Success)
             {
-                var exits = await _postRepository.ExitsAsync(id);
-
-                if (!exits)
-                {
-                    return NotFound("Post not found");
-                }
-
-                await _postRepository.DeleteAsync(id);
-                int saveResult = await _postRepository.SaveAsync();
-
-                if (!(saveResult > 0))
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
-                }
-
-                return NoContent();
+                return StatusCode(serviceResponse.StatusCode, serviceResponse.Message);
             }
-            catch (DbUpdateException ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
-            }
+
+            return NoContent();
         }
+
     }
 }
