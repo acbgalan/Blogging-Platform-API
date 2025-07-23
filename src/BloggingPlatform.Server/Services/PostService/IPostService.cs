@@ -10,6 +10,7 @@ namespace BloggingPlatform.Server.Services.PostService
         Task<ServiceResult<PostResponse>> GetPostAsync(int id);
         Task<ServiceResult<List<PostResponse>>> GetPostsAsync(string? searchTerm);
         Task<ServiceResult<PostResponse>> CreatePostAsync(CreatePostRequest createPostRequest);
+        Task<ServiceResult<bool?>> UpdatePostAsync(UpdatePostRequest updatePostRequest);
     }
 
 }

@@ -105,5 +105,59 @@ namespace BloggingPlatform.Server.Services.PostService
 
             return serviceResult;
         }
+
+        public async Task<ServiceResult<bool?>> UpdatePostAsync(UpdatePostRequest updatePostRequest)
+        {
+            var serviceResult = new ServiceResult<bool?>();
+
+            try
+            {
+                var postDb = await _postRepository.GetAsync(updatePostRequest.Id);
+
+                if (postDb == null)
+                {
+                    serviceResult.Data = null;
+                    serviceResult.Success = false;
+                    serviceResult.Message = "Post not found";
+                    serviceResult.StatusCode = StatusCodes.Status404NotFound;
+
+                    return serviceResult;
+                }
+
+                postDb = _mapper.Map(updatePostRequest, postDb);
+
+                await _postRepository.UpdateAsync(postDb);
+                int saveResult = await _postRepository.SaveAsync();
+
+                if (!(saveResult > 0))
+                {
+                    serviceResult.Data = null;
+                    serviceResult.Success = false;
+                    serviceResult.Message = "Unexpected value when saving";
+                    serviceResult.StatusCode = StatusCodes.Status500InternalServerError;
+                }
+
+                serviceResult.Data = null;
+                serviceResult.Success = true;
+                serviceResult.Message = "Post updated successfully";
+                serviceResult.StatusCode = StatusCodes.Status204NoContent;
+            }
+            catch (DbUpdateException ex)
+            {
+                serviceResult.Data = null;
+                serviceResult.Success = false;
+                serviceResult.Message = $"Database error: {ex.Message}";
+                serviceResult.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+            catch (Exception ex)
+            {
+                serviceResult.Data = null;
+                serviceResult.Success = false;
+                serviceResult.Message = $"Unexpected error: {ex.Message}";
+                serviceResult.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+
+            return serviceResult;
+        }
     }
 }

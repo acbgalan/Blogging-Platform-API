@@ -87,40 +87,24 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> UpdatePost(int id, UpdatePostRequest updatePostRequest)
         {
-            try
+            if(updatePostRequest == null)
             {
-                if (updatePostRequest == null || id != updatePostRequest.Id)
-                {
-                    return BadRequest("Id mismatch");
-                }
-
-                var postDb = await _postRepository.GetAsync(id);
-
-                if (postDb == null)
-                {
-                    return NotFound("Post not found");
-                }
-
-                postDb = _mapper.Map(updatePostRequest, postDb);
-
-                await _postRepository.UpdateAsync(postDb);
-                int saveResult = await _postRepository.SaveAsync();
-
-                if (!(saveResult > 0))
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
-                }
-
-                return NoContent();
+                return BadRequest();
             }
-            catch (DbUpdateException ex)
+
+            if (id != updatePostRequest.Id)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
+                return BadRequest("Id mismatch");
             }
-            catch (Exception ex)
+
+            var serviceResponse = await  _postService.UpdatePostAsync(updatePostRequest);
+
+            if (!serviceResponse.Success)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
+                return StatusCode(serviceResponse.StatusCode, serviceResponse.Message);
             }
+
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]
