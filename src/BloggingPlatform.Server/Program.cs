@@ -1,6 +1,7 @@
 using BloggingPlatform.Data.Context;
 using BloggingPlatform.Data.Repositories;
 using BloggingPlatform.Server.Mapper;
+using BloggingPlatform.Server.Services.PostService;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,7 @@ builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializ
 
 builder.Services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationConnection")));
 builder.Services.AddScoped<IPostRepository, PostRepository>();
+builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddAutoMapper(cfg => { cfg.LicenseKey = builder.Configuration["AutoMapper:LicenseKey"]; }, typeof(AutoMapperProfiles));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -19,7 +21,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
         Title = "Blogging Platform API",
-        Version = "v1",
+        Version = "v1.1",
         Description = "Backend Projects (roadmap.sh) - Blogging Platform API. Build a RESTful API for a personal blogging platform",
         Contact = new Microsoft.OpenApi.Models.OpenApiContact
         {

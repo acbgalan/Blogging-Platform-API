@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using BloggingPlatform.Data.Entities;
 using BloggingPlatform.Data.Repositories;
+using BloggingPlatform.Server.Services.PostService;
 using BloggingPlatform.Shared.Requests.Post;
 using BloggingPlatform.Shared.Responses.Post;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using System.Data.Common;
 
 namespace BloggingPlatform.Server.Controllers
@@ -17,28 +19,28 @@ namespace BloggingPlatform.Server.Controllers
     {
         private readonly IPostRepository _postRepository;
         private readonly IMapper _mapper;
+        private readonly IPostService _postService;
 
-        public PostsController(IPostRepository postRepository, IMapper mapper)
+        public PostsController(IPostRepository postRepository, IMapper mapper, IPostService postService)
         {
             _postRepository = postRepository;
             _mapper = mapper;
+            _postService = postService;
         }
 
         [HttpGet("{id:int}", Name = "GetPost")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<PostResponse>> GetPost(int id)
-        {
-            var post = await _postRepository.GetAsync(id);
+                  {
+            var response = await _postService.GetPostAsync(id);
 
-            if (post == null)
+            if (!response.Success)
             {
-                return NotFound("Post not found");
+                return NotFound(response.Message);
             }
 
-            var postResponse = _mapper.Map<PostResponse>(post);
-
-            return Ok(postResponse);
+            return Ok(response.Data);
         }
 
         [HttpGet]
@@ -46,66 +48,36 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<PostResponse>>> GetPosts([FromQuery] string? searchTerm)
         {
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+            var serviceResponse = await _postService.GetPostsAsync(searchTerm);
+
+            if (!serviceResponse.Success)
             {
-                var posts = await _postRepository.SearchPostsAsync(searchTerm);
-
-                if (posts.Count == 0)
-                {
-                    return NotFound("Posts not found");
-                }
-
-                var postsReponse = _mapper.Map<List<PostResponse>>(posts);
-                return Ok(postsReponse);
+                return NotFound(serviceResponse.Message);
             }
-            else
-            {
-                var posts = await _postRepository.GetAllAsync();
 
-                if (posts.Count == 0)
-                {
-                    return NotFound("Posts not found");
-                }
-
-                var postsResponse = _mapper.Map<List<PostResponse>>(posts);
-                return Ok(postsResponse);
-            }
+            return Ok(serviceResponse.Data);
         }
 
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> CreatePost([FromBody] CreatePostRequest createPostRequest)
         {
-            try
+            if (createPostRequest == null)
             {
-                if (createPostRequest == null)
-                {
-                    return BadRequest();
-                }
-
-                var post = _mapper.Map<Post>(createPostRequest);
-                await _postRepository.AddAsync(post);
-                int saveResult = await _postRepository.SaveAsync();
-
-                if (!(saveResult > 0))
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
-                }
-
-                var postResponse = _mapper.Map<PostResponse>(post);
-
-                return CreatedAtRoute("GetPost", new { id = post.Id }, postResponse);
+                return BadRequest();
             }
-            catch (DbUpdateException ex)
+
+            var serviceResponse = await _postService.CreatePostAsync(createPostRequest);
+
+            if (!serviceResponse.Success)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
+                return StatusCode(serviceResponse.StatusCode, serviceResponse.Message);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
-            }
+
+            return CreatedAtRoute("GetPost", new { id = serviceResponse.Data!.Id }, serviceResponse.Data);
         }
 
         [HttpPut("{id:int}")]
@@ -115,40 +87,24 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> UpdatePost(int id, UpdatePostRequest updatePostRequest)
         {
-            try
+            if (updatePostRequest == null)
             {
-                if (updatePostRequest == null || id != updatePostRequest.Id)
-                {
-                    return BadRequest("Id mismatch");
-                }
-
-                var postDb = await _postRepository.GetAsync(id);
-
-                if (postDb == null)
-                {
-                    return NotFound("Post not found");
-                }
-
-                postDb = _mapper.Map(updatePostRequest, postDb);
-
-                await _postRepository.UpdateAsync(postDb);
-                int saveResult = await _postRepository.SaveAsync();
-
-                if (!(saveResult > 0))
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
-                }
-
-                return NoContent();
+                return BadRequest();
             }
-            catch (DbUpdateException ex)
+
+            if (id != updatePostRequest.Id)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
+                return BadRequest("Id mismatch");
             }
-            catch (Exception ex)
+
+            var serviceResponse = await _postService.UpdatePostAsync(updatePostRequest);
+
+            if (!serviceResponse.Success)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
+                return StatusCode(serviceResponse.StatusCode, serviceResponse.Message);
             }
+
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]
@@ -157,33 +113,15 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> DeletePost(int id)
         {
-            try
+            var serviceResponse = await _postService.DeletePostAsync(id);
+
+            if (!serviceResponse.Success)
             {
-                var exits = await _postRepository.ExitsAsync(id);
-
-                if (!exits)
-                {
-                    return NotFound("Post not found");
-                }
-
-                await _postRepository.DeleteAsync(id);
-                int saveResult = await _postRepository.SaveAsync();
-
-                if (!(saveResult > 0))
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected value when saving");
-                }
-
-                return NoContent();
+                return StatusCode(serviceResponse.StatusCode, serviceResponse.Message);
             }
-            catch (DbUpdateException ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Database error: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error: {ex.Message}");
-            }
+
+            return NoContent();
         }
+
     }
 }
