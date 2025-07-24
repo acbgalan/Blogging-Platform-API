@@ -13,7 +13,7 @@ Developed by Carlos Blanco. 📧acbgalan@gmail.com  🌐 www.carlosblanco.dev
 - AutoMapper v15 (requires a license)
 
 
-### 🔐 AutoMapper License Configuration
+### 🔐 AutoMapper License Configuration (optional)
 
 Get your free automapper licence from [automapper.io](https://automapper.io/) 
 
@@ -45,6 +45,7 @@ Provide your license key using User Secrets.
 📁 BloggingPlatform.Server  
 ├── 📂 Controllers      - Controllers with endpoints  
 └── 📂 Mapper           - AutoMapper configurations  
+└── 📂 Services         - Business logic encapsulated within services  
 
 📁 BloggingPlatform.Shared  
 ├── 📂 Requests         - DTOs for API requests  
@@ -67,7 +68,7 @@ Desarrollado por Carlos Blanco. 📧acbgalan@gmail.com  🌐 www.carlosblanco.de
 - AutoMapper v15 (requiere licencia)
 
 
-### 🔐 Configuración de licencia automapper
+### 🔐 Configuración de licencia automapper (opcional)
 
 Obten tu licencia gratuita de automapper desde [automapper.io](https://automapper.io/) 
 
@@ -98,6 +99,7 @@ Introduce tu licencia mediante User Secrets.
 📁 BloggingPlatform.Server  
 ├── 📂 Controllers      - Controladores con endpoints REST  
 └── 📂 Mapper           - Configuraciones de AutoMapper  
+└── 📂 Services         - Lógica de negocio encapsulada en servicios  
 
 📁 BloggingPlatform.Shared  
 ├── 📂 Requests         - DTOs para solicitudes a la API  
