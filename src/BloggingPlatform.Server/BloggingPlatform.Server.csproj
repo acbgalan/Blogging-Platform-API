@@ -10,7 +10,7 @@
 		<Description>Backend Projects (roadmap.sh) - Blogging Platform API. Build a RESTful API for a personal blogging platform</Description>
 		<Company></Company>
 		<Authors>Carlos Blanco</Authors>
-		<Version>1.1.0</Version>
+		<Version>1.1.1</Version>
 		<RepositoryUrl>https://github.com/acbgalan/Blogging-Platform-API</RepositoryUrl>
 	</PropertyGroup>
 
