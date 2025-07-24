@@ -17,14 +17,10 @@ namespace BloggingPlatform.Server.Controllers
     [ApiController]
     public class PostsController : ControllerBase
     {
-        private readonly IPostRepository _postRepository;
-        private readonly IMapper _mapper;
         private readonly IPostService _postService;
 
-        public PostsController(IPostRepository postRepository, IMapper mapper, IPostService postService)
+        public PostsController(IPostService postService)
         {
-            _postRepository = postRepository;
-            _mapper = mapper;
             _postService = postService;
         }
 
@@ -32,7 +28,7 @@ namespace BloggingPlatform.Server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<PostResponse>> GetPost(int id)
-                  {
+        {
             var response = await _postService.GetPostAsync(id);
 
             if (!response.Success)
